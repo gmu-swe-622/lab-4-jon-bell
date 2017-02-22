@@ -1,5 +1,5 @@
 # SWE 622 Spring 2017 - Lab 4
-## Consistency Questions
+## Heartbeats
 
 In this lab, you'll have some more fun with RMI, this time developing a protocol to keep track of which clients are alive. In this repository, you'll find the usual RMI setup: a shared project that defines the RMI interface, a client and a server. The interface has the following methods:
 
