@@ -4,6 +4,12 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.StampedLock;
@@ -19,8 +25,28 @@ import edu.gmu.swe622.lab4.IHeartbeatServer;
 
 public class HeartbeatServer implements IHeartbeatServer {
 	public HeartbeatServer() {
-	}
+		TimerTask t = new TimerTask() {
+			
+			@Override
+			public void run() {
+				StringBuilder sb = new StringBuilder();
+				
+				sb.append("Current set of active clients @ " + System.currentTimeMillis()+":\n");
+				synchronized (clientUpdates) {
+					for(Integer i : clientUpdates.keySet())
+					{
+						Long hb = clientUpdates.get(i);
+						if(System.currentTimeMillis() - 5000 < hb)
+							sb.append("\tClient: " + i+"\n");
+					}
+				}
+				System.out.println(sb);
 
+			}
+		};
+		Timer timer = new Timer();
+		timer.schedule(t, 0,5000);
+	}
 
 	public static Registry createAndBind(int port) throws Exception {
 		IHeartbeatServer lockServer = new HeartbeatServer();
@@ -61,24 +87,28 @@ public class HeartbeatServer implements IHeartbeatServer {
 		}
 	}
 
+	AtomicInteger clientId = new AtomicInteger();
+
+	
+	ConcurrentHashMap<Integer, Long> clientUpdates = new ConcurrentHashMap<Integer, Long>();
 
 	@Override
 	public int registerClient() throws RemoteException {
-		// TODO Auto-generated method stub
-		return 0;
+		int ret = clientId.getAndIncrement();
+		clientUpdates.put(ret, System.currentTimeMillis());
+		System.out.println("Registered: " + ret + " @ " + System.currentTimeMillis());
+		return ret;
 	}
-
 
 	@Override
 	public void heartbeat(int client) throws RemoteException {
-		// TODO Auto-generated method stub
-		
+		System.out.println("HB @ " + System.currentTimeMillis() + " From " + client);
+		clientUpdates.put(client, System.currentTimeMillis());
 	}
-
 
 	@Override
 	public void disconnect(int client) throws RemoteException {
-		// TODO Auto-generated method stub
-		
+		System.out.println("Disconnect: " + client);
+		clientUpdates.remove(client);
 	}
 }
