@@ -19,7 +19,6 @@ public class HeartbeatClientMain {
 	private static IHeartbeatServer heartbeatServer;
 
 	public static void main(String[] args) throws RemoteException {
-		new HeartbeatClientMain().foo();
 		try {
 			Registry registry = LocateRegistry.getRegistry("localhost", 9000);
 			heartbeatServer = (IHeartbeatServer) registry.lookup(IHeartbeatServer.HEARTBEAT_SERVER_RMI_NAME);
